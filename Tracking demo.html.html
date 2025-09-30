@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Order Tracker</title>
+</head>
+<body>
+  <h2>Track Your Order</h2>
+  <input type="text" id="orderId" placeholder="Enter Order ID (e.g., JWL-2025-0001)">
+  <button onclick="trackOrder()">Track</button>
+
+  <pre id="result"></pre>
+
+  <script>
+    async function trackOrder() {
+      const orderId = document.getElementById("orderId").value.trim();
+      if (!orderId) {
+        document.getElementById("result").textContent = "⚠️ Please enter an Order ID.";
+        return;
+      }
+
+      const apiUrl = "https://script.google.com/macros/s/AKfycbw8LZob3a2hOhI1T-omdVKFqy0misIzfUR47lvzufr3bJhxcO2WvP_o8lp8rhQb8wVgBg/exec?orderId=" + orderId;
+
+      try {
+        const response = await fetch(apiUrl);
+        const text = await response.text();
+        if (!text) {
+          document.getElementById("result").textContent = "❌ Empty response from server.";
+          return;
+        }
+        const data = JSON.parse(text);
+        document.getElementById("result").textContent = JSON.stringify(data, null, 2);
+      } catch (err) {
+        document.getElementById("result").textContent = "❌ Error fetching order: " + err;
+      }
+    }
+  </script>
+</body>
+</html>
