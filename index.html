@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Jewelry Order Tracker</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #fdf6f0;
+      display: flex;
+      justify-content: center;
+      padding: 40px;
+    }
+
+    #order-tracker {
+      background: #fff;
+      padding: 30px;
+      border-radius: 15px;
+      max-width: 450px;
+      width: 100%;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+    }
+
+    h2 {
+      text-align: center;
+      color: #b8860b;
+      margin-bottom: 20px;
+    }
+
+    input, button {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 15px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      font-size: 16px;
+    }
+
+    button {
+      background: #b8860b;
+      color: white;
+      border: none;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+
+    button:hover {
+      background: #a17400;
+    }
+
+    #status p {
+      margin: 5px 0;
+    }
+
+    #progress-bar {
+      margin-top: 20px;
+      display: none;
+    }
+
+    #progress-bar .stages {
+      display: flex;
+      justify-content: space-between;
+      font-size: 14px;
+      margin-bottom: 5px;
+      color: #555;
+    }
+
+    #progress-bar .bar-container {
+      position: relative;
+      height: 12px;
+      background: #eee;
+      border-radius: 6px;
+      overflow: hidden;
+    }
+
+    #progress-fill {
+      height: 12px;
+      width: 0%;
+      background: #b8860b;
+      border-radius: 6px;
+      transition: width 0.5s ease;
+    }
+  </style>
+</head>
+<body>
+
+<div id="order-tracker">
+  <h2>Track Your Order</h2>
+  <input type="text" id="orderId" placeholder="Enter Order ID"/>
+  <button onclick="trackOrder()">Track</button>
+
+  <div id="status"></div>
+
+  <div id="progress-bar">
+    <div class="stages">
+      <span>Pending</span>
+      <span>Processing</span>
+      <span>Shipped</span>
+      <span>Delivered</span>
+    </div>
+    <div class="bar-container">
+      <div id="progress-fill"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+async function trackOrder() {
+  const orderId = document.getElementById('orderId').value.trim();
+  const statusBox = document.getElementById('status');
+  const progressBar = document.getElementById('progress-bar');
+
+  if (!orderId) {
+    statusBox.innerHTML = "⚠️ Please enter an Order ID.";
+    progressBar.style.display = "none";
+    return;
+  }
+
+  statusBox.innerHTML = "⏳ Checking...";
+  progressBar.style.display = "none";
+
+  // Replace with your deployed Google Apps Script URL
+  const apiUrl = "https://script.google.com/macros/s/AKfycbyPymv44uraJrBcZWHHsB1wTdK7nlZOpiea5h-ITRy9SkrHr-pHTE0rRDMhosYL9VFJkA/exec?orderId=" + orderId;
+
+  try {
+    const res = await fetch(apiUrl);
+    const data = await res.json();
+    console.log("Response data:", data);
+
+    if (data.error) {
+      statusBox.innerHTML = "❌ Order not found.";
+      return;
+    }
+
+    // Display order info (matches Apps Script JSON keys)
+    statusBox.innerHTML = `
+      <p><strong>Order ID:</strong> ${data.orderId}</p>
+      <p><strong>Customer:</strong> ${data.customer}</p>
+      <p><strong>Item:</strong> ${data.item}</p>
+      <p><strong>Status:</strong> ${data.status}</p>
+      <p><strong>Estimated Delivery:</strong> ${new Date(data.estimatedDelivery).toLocaleDateString()}</p>
+    `;
+
+    // Update progress bar
+    const stages = ["Pending","Processing","Shipped","Delivered"];
+    const idx = stages.indexOf(data.status);
+    const percent = ((idx + 1) / stages.length) * 100;
+    document.getElementById('progress-fill').style.width = percent + "%";
+    progressBar.style.display = "block";
+
+  } catch (err) {
+    console.error(err);
+    statusBox.innerHTML = "⚠️ Error fetching order.";
+    progressBar.style.display = "none";
+  }
+}
+</script>
+
+</body>
+</html>
